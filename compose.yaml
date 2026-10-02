@@ -1,0 +1,20 @@
+# Example deployment. Put a TLS-terminating reverse proxy in front of it (see README).
+services:
+  hme-bitwarden:
+    build: .
+    image: hme-bitwarden:local
+    container_name: hme-bitwarden
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - hme-data:/data          # iCloud session (cookies + trust token), never the password
+    ports:
+      - "127.0.0.1:8000:8000"   # only reachable through the reverse proxy on this host
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+
+volumes:
+  hme-data:
