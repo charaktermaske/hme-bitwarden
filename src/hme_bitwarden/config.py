@@ -24,7 +24,7 @@ class ConfigError(ValueError):
 class AdminAuth(StrEnum):
     """How the admin UI is protected."""
 
-    PASSWORD = "password"  # built-in login with HME_ADMIN_PASSWORD
+    PASSWORD = "password"  # noqa: S105 - built-in login with HME_ADMIN_PASSWORD
     PROXY = "proxy"  # an authenticating reverse proxy (Authelia, Authentik, ...) guards everything but /api
 
 
@@ -44,6 +44,10 @@ class Settings:
     ntfy_token: str = ""
     webhook_url: str = ""
     log_level: str = "INFO"
+    host: str = "0.0.0.0"  # noqa: S104 - listening on all interfaces is intended inside a container
+    port: int = 8000
+    trusted_proxies: str = "127.0.0.1"
+    access_log: bool = False
 
     @property
     def session_dir(self) -> Path:
@@ -144,4 +148,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         ntfy_token=_read(env, "HME_NTFY_TOKEN"),
         webhook_url=_read(env, "HME_WEBHOOK_URL"),
         log_level=_read(env, "HME_LOG_LEVEL", "INFO").upper(),
+        host=_read(env, "HME_HOST", "0.0.0.0"),  # noqa: S104
+        port=_int(env, "HME_PORT", 8000, minimum=1),
+        trusted_proxies=_read(env, "HME_TRUSTED_PROXIES", "127.0.0.1"),
+        access_log=_bool(env, "HME_ACCESS_LOG", False),
     )

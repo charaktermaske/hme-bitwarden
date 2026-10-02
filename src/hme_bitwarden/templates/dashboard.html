@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>iCloud account</h2>
+  {% if account.state == "ready" %}
+    <p class="ok">Signed in as {{ account.apple_id }}</p>
+    <form method="post" action="/icloud/sign-out">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="link">Sign out and delete the stored session</button>
+    </form>
+  {% elif account.state == "awaiting_code" %}
+    <p>Apple sent a six-digit verification code
+      {% if account.code_delivery == "sms" %}by text message{% else %}to your trusted Apple devices{% endif %}.</p>
+    <form method="post" action="/icloud/verify">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="code">Verification code</label>
+      <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus
+             autocomplete="one-time-code">
+      <button>Verify</button>
+    </form>
+    <form method="post" action="/icloud/cancel">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="link">Cancel</button>
+    </form>
+  {% else %}
+    <p class="bad">{{ account.problem or "Not signed in" }}</p>
+    <form method="post" action="/icloud/sign-in">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="apple_id">Apple ID</label>
+      <input id="apple_id" name="apple_id" type="email" required autocomplete="username"
+             value="{{ account.apple_id or '' }}">
+      <label for="apple_password">Password</label>
+      <input id="apple_password" name="password" type="password" required autocomplete="current-password">
+      <button>Sign in</button>
+    </form>
+    <p class="muted">Your password is only kept in memory and never written to disk. Only the session
+      (cookies and trust token) is stored. Apple will then send a verification code to your devices.</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Set up Bitwarden</h2>
+  <ol>
+    <li>Generator → <b>Username</b> → type <b>Forwarded email alias</b></li>
+    <li>Service: <b>SimpleLogin</b></li>
+    <li>Server URL: <code>{{ base_url }}</code></li>
+    <li>API key: <details><summary>show</summary><code>{{ api_token }}</code></details></li>
+  </ol>
+  <p class="muted">Works in the browser extension, desktop and mobile apps and the web vault. Each address is
+    labeled with the website you generate it for.</p>
+</section>
+
+{% if recent %}
+<section>
+  <h2>Created since start</h2>
+  <ul class="aliases">
+    {% for alias in recent %}
+    <li><code>{{ alias.email }}</code> <span class="muted">{{ alias.label }} ·
+      {{ alias.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}
