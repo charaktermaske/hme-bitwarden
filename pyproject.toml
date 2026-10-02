@@ -9,7 +9,7 @@ description = "Use iCloud+ Hide My Email as an email forwarder in the Bitwarden 
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-authors = [{ name = "Dennis" }]
+authors = [{ name = "charaktermaske" }]
 keywords = ["bitwarden", "icloud", "hide-my-email", "email-alias", "self-hosted"]
 classifiers = [
   "Development Status :: 4 - Beta",
