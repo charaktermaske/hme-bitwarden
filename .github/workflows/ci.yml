@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t hme-bitwarden:ci .
+      - name: Container starts and is healthy
+        run: |
+          docker run -d --name hme --read-only --tmpfs /tmp --cap-drop ALL \
+            -e HME_API_TOKEN="$(openssl rand -hex 32)" -e HME_ADMIN_PASSWORD="ci-admin-password" \
+            -p 8000:8000 hme-bitwarden:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && exit 0; sleep 1; done
+          docker logs hme; exit 1
