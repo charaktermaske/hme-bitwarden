@@ -2,7 +2,7 @@
 
 **Use iCloud+ Hide My Email as an email forwarder in the Bitwarden username generator.**
 
-[![CI](https://github.com/OWNER/hme-bitwarden/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/hme-bitwarden/actions/workflows/ci.yml)
+[![CI](https://github.com/charaktermaske/hme-bitwarden/actions/workflows/ci.yml/badge.svg)](https://github.com/charaktermaske/hme-bitwarden/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -49,7 +49,7 @@ flowchart LR
 ## Quick start
 
 ```bash
-git clone https://github.com/OWNER/hme-bitwarden.git
+git clone https://github.com/charaktermaske/hme-bitwarden.git
 cd hme-bitwarden
 cp .env.example .env
 ```
