@@ -18,6 +18,7 @@ def test_defaults(tmp_path):
     assert settings.admin_auth is AdminAuth.PASSWORD
     assert settings.cookie_secure is True
     assert settings.access_log is False
+    assert settings.reuse_minutes == 2
     assert settings.session_dir == tmp_path / "session"
 
 
@@ -67,7 +68,9 @@ def test_session_secret_is_generated_once(tmp_path):
     assert len(first) >= 48
 
 
-@pytest.mark.parametrize(("name", "value"), [("HME_PORT", "x"), ("HME_KEEPALIVE_INTERVAL", "10")])
+@pytest.mark.parametrize(
+    ("name", "value"), [("HME_PORT", "x"), ("HME_KEEPALIVE_INTERVAL", "10"), ("HME_REUSE_MINUTES", "-1")]
+)
 def test_invalid_numbers(tmp_path, name, value):
     with pytest.raises(ConfigError, match=name):
         load_settings(env(tmp_path, **{name: value}))

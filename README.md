@@ -170,6 +170,7 @@ All settings are environment variables. Every secret can be read from a file ins
 | `HME_COOKIE_SECURE` | `true` | Send the admin session cookie over HTTPS only; set `false` only for local HTTP testing |
 | `HME_SESSION_SECRET` | *generated* | Key that signs admin sessions; generated once and stored in `/data` if unset |
 | `HME_MAX_ALIASES_PER_HOUR` | `10` | The service's own hourly limit on new addresses |
+| `HME_REUSE_MINUTES` | `2` | Pressing regenerate for the same website within this many minutes returns the address just created instead of a new one (`0` = always new) |
 | `HME_KEEPALIVE_INTERVAL` | `21600` | Seconds between session refreshes (minimum 300) |
 | `HME_NTFY_URL`, `HME_NTFY_TOPIC`, `HME_NTFY_TOKEN` | | Send a notification to [ntfy](https://ntfy.sh) when you need to sign in again |
 | `HME_WEBHOOK_URL` | | Also POST `{"title", "message", "url"}` as JSON to this URL |
