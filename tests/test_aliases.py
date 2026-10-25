@@ -52,3 +52,37 @@ def test_service_rate_limit():
     service.create()
     with pytest.raises(RateLimited):
         service.create()
+
+
+def test_service_reuses_address_for_same_site_within_window():
+    backend = FakeBackend()
+    backend.state = AccountState.READY
+    now = [0.0]
+    service = AliasService(backend, max_per_hour=1, reuse_minutes=15, clock=lambda: now[0])
+    first = service.create(hostname="a.example")
+    now[0] = 14 * 60
+    assert service.create(hostname="a.example") == first  # no Apple call, no rate limit used
+    assert len(backend.created) == 1
+    assert len(service.recent) == 1
+
+
+def test_service_reuse_needs_same_site_recent_and_a_real_hostname():
+    backend = FakeBackend()
+    backend.state = AccountState.READY
+    now = [0.0]
+    service = AliasService(backend, max_per_hour=10, reuse_minutes=15, clock=lambda: now[0])
+    a = service.create(hostname="a.example")
+    b = service.create(hostname="b.example")
+    assert a != b
+    now[0] = 15 * 60
+    assert service.create(hostname="b.example") != b
+    first = service.create()
+    assert service.create() != first  # no hostname: never reused
+    assert len(backend.created) == 5
+
+
+def test_service_reuse_off_by_default():
+    backend = FakeBackend()
+    backend.state = AccountState.READY
+    service = AliasService(backend, max_per_hour=10)
+    assert service.create(hostname="a.example") != service.create(hostname="a.example")

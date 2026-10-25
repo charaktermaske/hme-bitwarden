@@ -1,4 +1,4 @@
-"""Alias creation on top of the iCloud backend: labels, rate limiting and a short in-memory history."""
+"""Alias creation on top of the iCloud backend: labels, rate limiting, reuse and a short in-memory history."""
 
 from __future__ import annotations
 
@@ -76,19 +76,40 @@ class SlidingWindowLimiter:
 
 
 class AliasService:
-    def __init__(self, backend: AliasBackend, max_per_hour: int) -> None:
+    def __init__(self, backend: AliasBackend, max_per_hour: int, reuse_minutes: int = 0, clock=time.monotonic) -> None:
         self._backend = backend
         self._limiter = SlidingWindowLimiter(max_per_hour, 3600)
         self._history: deque[CreatedAlias] = deque(maxlen=HISTORY_SIZE)
+        self._reuse_window = reuse_minutes * 60
+        self._clock = clock
+        self._last: tuple[float, CreatedAlias] | None = None
+        self._lock = threading.Lock()
 
     @property
     def recent(self) -> list[CreatedAlias]:
         return list(reversed(self._history))
 
     def create(self, hostname: str = "", description: str = "") -> CreatedAlias:
+        label = derive_label(hostname, description)
+        with self._lock:
+            reused = self._reusable(label)
+            if reused is not None:
+                log.info("Reused the Hide My Email address just created for %s", label)
+                return reused
+            return self._create(label, description)
+
+    def _reusable(self, label: str) -> CreatedAlias | None:
+        """Pressing "regenerate" on the same site soon after hands back the same address instead of a new one."""
+        if self._last is None or label == DEFAULT_LABEL:
+            return None
+        created, alias = self._last
+        if alias.label == label and self._clock() - created < self._reuse_window:
+            return alias
+        return None
+
+    def _create(self, label: str, description: str) -> CreatedAlias:
         if not self._limiter.try_acquire():
             raise RateLimited("Hourly alias limit reached; try again later")
-        label = derive_label(hostname, description)
         note = clean(description, MAX_NOTE_LENGTH) or DEFAULT_NOTE
         try:
             email = self._backend.create_alias(label, note)
@@ -97,5 +118,6 @@ class AliasService:
             raise
         alias = CreatedAlias(email=email, label=label, created_at=datetime.now(UTC))
         self._history.append(alias)
+        self._last = (self._clock(), alias)
         log.info("Created a Hide My Email address for %s", label)
         return alias

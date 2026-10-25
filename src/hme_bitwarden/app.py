@@ -71,7 +71,7 @@ def create_app(
         )
 
     backend = backend or ICloudAccount(settings.session_dir, on_session_lost=on_session_lost)
-    aliases = AliasService(backend, settings.max_aliases_per_hour)
+    aliases = AliasService(backend, settings.max_aliases_per_hour, settings.reuse_minutes)
     failures = FailureLimiter()
     stop = threading.Event()
 

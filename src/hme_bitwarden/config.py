@@ -39,6 +39,7 @@ class Settings:
     cookie_secure: bool = True
     keepalive_interval: int = 6 * 3600
     max_aliases_per_hour: int = 10
+    reuse_minutes: int = 2
     ntfy_url: str = ""
     ntfy_topic: str = ""
     ntfy_token: str = ""
@@ -143,6 +144,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         cookie_secure=_bool(env, "HME_COOKIE_SECURE", True),
         keepalive_interval=_int(env, "HME_KEEPALIVE_INTERVAL", 6 * 3600, minimum=300),
         max_aliases_per_hour=_int(env, "HME_MAX_ALIASES_PER_HOUR", 10, minimum=1),
+        reuse_minutes=_int(env, "HME_REUSE_MINUTES", 2, minimum=0),
         ntfy_url=_read(env, "HME_NTFY_URL").rstrip("/"),
         ntfy_topic=_read(env, "HME_NTFY_TOPIC"),
         ntfy_token=_read(env, "HME_NTFY_TOKEN"),
